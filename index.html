@@ -103,24 +103,49 @@
     50%      { box-shadow: 0 2px 6px #00000038, 0 0 0 9px #16181c00; }
   }
 
-  /* --- FAB --- */
-  .fab {
-    position: absolute; right: 16px; bottom: 24px; z-index: 10;
-    width: 52px; height: 52px; border-radius: 50%;
-    background: var(--ink); border: none;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px #00000030; cursor: pointer;
+  /* --- Нижняя панель с кнопками --- */
+  .bottom-bar {
+    position: absolute; left: 16px; right: 16px; bottom: 24px; z-index: 10;
+    display: flex; gap: 10px; align-items: center;
+    justify-content: space-between;
   }
-  .fab svg { width: 22px; height: 22px; }
-  .fab:active { transform: scale(.94); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    height: 50px; padding: 0 20px;
+    border-radius: 25px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px; font-weight: 600; letter-spacing: .01em;
+    cursor: pointer;
+    transition: transform .14s ease, box-shadow .2s ease, background .18s ease;
+  }
+  .btn svg { width: 19px; height: 19px; flex: none; }
+  .btn:active { transform: scale(.96); }
+
+  .btn-dark {
+    background: var(--ink); color: #fff; border: none;
+    box-shadow: 0 4px 16px #00000033, 0 1px 3px #0000001f;
+    padding-left: 17px;
+  }
+  .btn-dark:active { box-shadow: 0 2px 8px #00000033; }
+  .btn-dark.loading { opacity: .75; pointer-events: none; }
+  .btn-dark.loading svg { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .btn-light {
+    background: var(--paper); color: var(--ink);
+    border: 1px solid var(--line-strong);
+    box-shadow: 0 2px 10px #0000001a;
+  }
+  .btn-light:active { background: var(--paper-2); }
 
   .fab-status {
-    position: absolute; right: 16px; bottom: 84px; z-index: 10;
+    position: absolute; right: 16px; bottom: 82px; z-index: 10;
     background: var(--ink); color: #fff;
-    font-size: 12px; padding: 6px 10px; border-radius: 8px;
+    font-size: 12px; padding: 6px 11px; border-radius: 8px;
     opacity: 0; transform: translateY(4px);
     transition: opacity .2s ease, transform .2s ease;
-    pointer-events: none; max-width: 210px; text-align: right;
+    pointer-events: none; max-width: 220px; text-align: right;
   }
   .fab-status.show { opacity: 1; transform: translateY(0); }
 
@@ -198,6 +223,60 @@
     font-size: 13px; color: var(--grey); line-height: 1.55;
   }
 
+  /* --- Список групп внутри плашки --- */
+  .list-title {
+    font-family: 'Lora', serif;
+    font-size: 18px; font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .list-sub {
+    font-size: 12.5px; color: var(--grey);
+    margin: 0 0 6px;
+  }
+
+  .list-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+    cursor: pointer;
+    transition: opacity .15s ease;
+  }
+  .list-item:active { opacity: .55; }
+
+  .list-dot {
+    flex: none;
+    width: 10px; height: 10px; border-radius: 3px;
+    background: var(--ink);
+    margin-top: 2px;
+  }
+  .list-main { flex: 1; min-width: 0; }
+  .list-addr {
+    font-size: 15px; font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .list-meta {
+    font-size: 12.5px; color: var(--grey);
+    line-height: 1.45;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .list-chevron {
+    flex: none; color: var(--grey-light);
+    font-size: 18px; line-height: 1;
+  }
+
+  /* --- Кнопка "назад к списку" в карточке --- */
+  .sheet-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: none; border: none; padding: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; font-weight: 600;
+    color: var(--grey); cursor: pointer;
+    margin-bottom: 12px;
+  }
+  .sheet-back:active { color: var(--ink); }
+
   .leaflet-control-attribution {
     background: #ffffffcc !important;
     color: var(--grey-light) !important;
@@ -222,13 +301,26 @@
   <div class="chip" data-district="Пятигорск">Пятигорск</div>
 </div>
 
-<button class="fab" id="locateBtn" title="Найти ближайшую группу">
-  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="3.2" fill="#ffffff"/>
-    <path d="M12 2V5M12 19V22M2 12H5M19 12H22" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-    <circle cx="12" cy="12" r="7.2" stroke="#ffffff" stroke-width="1.6"/>
-  </svg>
-</button>
+<div class="bottom-bar">
+  <button class="btn btn-light" id="listBtn">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 6H21M8 12H21M8 18H21" stroke="#16181c" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="3.5" cy="6" r="1.5" fill="#16181c"/>
+      <circle cx="3.5" cy="12" r="1.5" fill="#16181c"/>
+      <circle cx="3.5" cy="18" r="1.5" fill="#16181c"/>
+    </svg>
+    <span>Список</span>
+  </button>
+
+  <button class="btn btn-dark" id="locateBtn">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="3.2" fill="#ffffff"/>
+      <path d="M12 1.8V5M12 19V22.2M1.8 12H5M19 12H22.2" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="12" cy="12" r="7.2" stroke="#ffffff" stroke-width="1.6"/>
+    </svg>
+    <span>Найти ближайшую</span>
+  </button>
+</div>
 <div class="fab-status" id="fabStatus"></div>
 
 <div class="sheet-scrim" id="scrim"></div>
@@ -246,6 +338,7 @@
     {
       id: 1,
       district: "Иноземцево",
+      shortAddress: "Радонежская, 16",
       fullAddress: "Радонежская улица, 16, пос. Иноземцево, ГО Железноводск, Ставропольский край",
       lat: 44.091356,
       lon: 43.102153,
@@ -259,6 +352,7 @@
     {
       id: 2,
       district: "Пятигорск",
+      shortAddress: "Пролетарская, 137А",
       fullAddress: "Пролетарская улица, 137А, пос. Свободы, ГО Пятигорск, Ставропольский край",
       lat: 44.023405,
       lon: 43.025112,
@@ -272,6 +366,7 @@
     {
       id: 3,
       district: "Иноземцево",
+      shortAddress: "Рядового Панченко, 24",
       fullAddress: "улица Рядового Панченко, 24, пос. Иноземцево, ГО Железноводск, Ставропольский край",
       lat: 44.083021,
       lon: 43.121299,
@@ -347,38 +442,140 @@
   // ---------------------------------------------------------------------
   // Фильтр по району
   // ---------------------------------------------------------------------
+
+  // Логика масштабирования при выборе фильтра:
+  // - если точки района разбросаны ШИРЕ 30 км — просто вмещаем их все в кадр;
+  // - если компактнее — держим зум в «коридоре» 10–30 км:
+  //   не приближаемся ближе, чем радиус 10 км вокруг центра точек.
+  const MIN_RADIUS_M = 10000;   // нижний предел приближения (радиус)
+  const WIDE_SPREAD_M = 30000;  // если разброс точек шире — показываем всё как есть
+
+  // Текущий выбранный фильтр — его же учитывает список групп
+  let currentDistrict = 'all';
+
+  function fitToGroups(list, animate) {
+    if (!list.length) return;
+
+    let bounds = L.latLngBounds(list.map(function (g) { return [g.lat, g.lon]; }));
+
+    // Оцениваем разброс точек по диагонали охватывающего прямоугольника
+    const spread = map.distance(bounds.getNorthWest(), bounds.getSouthEast());
+
+    if (spread <= WIDE_SPREAD_M) {
+      // Компактный район: не даём карте приблизиться ближе радиуса 10 км
+      bounds.extend(bounds.getCenter().toBounds(MIN_RADIUS_M * 2));
+    }
+    // Широкий разброс (> 30 км): оставляем bounds как есть — влезут все точки
+
+    const opts = {
+      // сверху оставляем место под заголовок и фильтры, снизу — под кнопки
+      paddingTopLeft: [40, 150],
+      paddingBottomRight: [40, 95]
+    };
+
+    if (animate === false) {
+      map.fitBounds(bounds, opts);
+    } else {
+      opts.duration = 0.6;
+      map.flyToBounds(bounds, opts);
+    }
+  }
+
   document.querySelectorAll('.chip').forEach(function (chip) {
     chip.addEventListener('click', function () {
       document.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
       chip.classList.add('active');
-      const d = chip.dataset.district;
+
+      currentDistrict = chip.dataset.district;
+      const visible = [];
+
       GROUPS.forEach(function (g) {
-        const show = (d === 'all') || (g.district === d);
+        const show = (currentDistrict === 'all') || (g.district === currentDistrict);
         const el = markers[g.id].getElement();
         if (el) el.style.display = show ? '' : 'none';
+        if (show) visible.push(g);
       });
+
+      closeSheet();
+      fitToGroups(visible);
     });
   });
 
   // ---------------------------------------------------------------------
-  // Карточка группы (bottom sheet)
+  // Плашка снизу: два режима — список групп и карточка одной группы
   // ---------------------------------------------------------------------
   const sheet = document.getElementById('sheet');
   const scrim = document.getElementById('scrim');
   const sheetContent = document.getElementById('sheetContent');
 
-  function openSheet(g, distanceKm) {
+  // Какие группы сейчас показаны (учитывает выбранный фильтр по району)
+  function visibleGroups() {
+    return GROUPS.filter(function (g) {
+      return currentDistrict === 'all' || g.district === currentDistrict;
+    });
+  }
+
+  // --- Режим 1: список групп ---
+  function openList() {
+    const list = visibleGroups();
+
+    if (!list.length) {
+      sheetContent.innerHTML = '<h2 class="list-title">Групп не найдено</h2>';
+    } else {
+      const itemsHtml = list.map(function (g) {
+        const phones = g.contacts.map(function (c) { return c.phone; }).join(' · ');
+        return (
+          '<div class="list-item" data-id="' + g.id + '">' +
+            '<div class="list-dot"></div>' +
+            '<div class="list-main">' +
+              '<div class="list-addr">' + g.shortAddress + '</div>' +
+              '<div class="list-meta">' + g.district + ' · ' + phones + '</div>' +
+            '</div>' +
+            '<div class="list-chevron">›</div>' +
+          '</div>'
+        );
+      }).join('');
+
+      sheetContent.innerHTML =
+        '<h2 class="list-title">Домашние группы</h2>' +
+        '<p class="list-sub">Нажми на группу, чтобы посмотреть на карте</p>' +
+        itemsHtml;
+
+      sheetContent.querySelectorAll('.list-item').forEach(function (el) {
+        el.addEventListener('click', function () {
+          const id = parseInt(el.dataset.id, 10);
+          const g = GROUPS.find(function (x) { return x.id === id; });
+          if (g) openSheet(g, null, true);
+        });
+      });
+    }
+
+    sheet.classList.add('open');
+    scrim.classList.add('open');
+  }
+
+  // --- Режим 2: карточка конкретной группы ---
+  // fromList = true → показываем кнопку "К списку"
+  function openSheet(g, distanceKm, fromList) {
     const contactsHtml = g.contacts.map(function (c) {
       const tel = c.phone.replace(/\s/g, '');
       return '<a href="tel:' + tel + '">' + c.name + ' — ' + c.phone + '</a>';
     }).join('');
 
+    const backHtml = fromList
+      ? '<button class="sheet-back" id="backToList">‹ К списку</button>'
+      : '';
+
     sheetContent.innerHTML =
+      backHtml +
       '<div class="sheet-district">' + g.district + '</div>' +
       '<h2><a href="' + g.mapUrl + '" target="_blank" rel="noopener">' + g.fullAddress + '</a></h2>' +
       '<div class="sheet-row"><span class="ico">◷</span><div><span class="label">Встречи</span>' + g.dayTime + '</div></div>' +
       '<div class="sheet-row sheet-contacts"><span class="ico">☏</span><div><span class="label">Контакты</span>' + contactsHtml + '</div></div>' +
       '<div class="sheet-note">Можно просто прийти и посмотреть — никто не будет ничего требовать. Если сомневаешься, напиши напрямую контактному человеку.</div>';
+
+    const backBtn = document.getElementById('backToList');
+    if (backBtn) backBtn.addEventListener('click', openList);
 
     sheet.classList.add('open');
     scrim.classList.add('open');
@@ -400,6 +597,8 @@
     scrim.classList.remove('open');
   }
   scrim.addEventListener('click', closeSheet);
+
+  document.getElementById('listBtn').addEventListener('click', openList);
 
   // ---------------------------------------------------------------------
   // Поиск ближайшей группы по геолокации
@@ -423,14 +622,18 @@
     }
   }
 
-  document.getElementById('locateBtn').addEventListener('click', function () {
+  const locateBtn = document.getElementById('locateBtn');
+
+  locateBtn.addEventListener('click', function () {
     if (!navigator.geolocation) {
       showStatus('Геолокация недоступна', 2500);
       return;
     }
+    locateBtn.classList.add('loading');
     showStatus('Определяем местоположение…', 0);
     navigator.geolocation.getCurrentPosition(
       function (pos) {
+        locateBtn.classList.remove('loading');
         fabStatus.classList.remove('show');
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
@@ -447,11 +650,17 @@
         }
       },
       function () {
+        locateBtn.classList.remove('loading');
         showStatus('Не удалось определить локацию', 2500);
       },
       { timeout: 8000 }
     );
   });
+
+  // ---------------------------------------------------------------------
+  // Начальный вид — все группы в кадре (без анимации)
+  // ---------------------------------------------------------------------
+  fitToGroups(GROUPS, false);
 </script>
 
 </body>
