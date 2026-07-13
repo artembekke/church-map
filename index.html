@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Домашние группы</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #ffffff;
+    --paper-2: #f6f6f6;
+    --line: #e3e3e3;
+    --line-strong: #cfcfcf;
+    --ink: #16181c;
+    --ink-2: #3d4147;
+    --grey: #85898f;
+    --grey-light: #a9adb3;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--paper);
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--ink);
+    overflow: hidden;
+  }
+
+  #map { position: absolute; inset: 0; z-index: 1; background: var(--paper); }
+
+  /* Обесцвечиваем тайлы до серой карты */
+  .leaflet-tile-pane {
+    filter: grayscale(1) contrast(0.92) brightness(1.06);
+  }
+
+  /* --- Header --- */
+  .header {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+    padding: 16px 16px 44px;
+    background: linear-gradient(180deg, #ffffff 42%, #ffffff00 100%);
+    pointer-events: none;
+  }
+  .header h1 {
+    font-family: 'Lora', serif;
+    font-weight: 600; font-size: 22px;
+    margin: 0 0 4px; color: var(--ink);
+  }
+  .header p {
+    margin: 0; font-size: 13px; color: var(--grey);
+    line-height: 1.45; max-width: 290px;
+  }
+
+  /* --- District chips --- */
+  .chips {
+    position: absolute; top: 94px; left: 16px; right: 16px; z-index: 10;
+    display: flex; gap: 8px; pointer-events: auto;
+  }
+  .chip {
+    font-size: 13px; font-weight: 600;
+    padding: 8px 14px; border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink-2);
+    border: 1px solid var(--line-strong);
+    cursor: pointer; white-space: nowrap;
+    box-shadow: 0 1px 3px #0000000d;
+    transition: background .18s ease, color .18s ease, transform .14s ease, border-color .18s ease;
+  }
+  .chip.active {
+    background: var(--ink); color: #fff; border-color: var(--ink);
+  }
+  .chip:active { transform: scale(.96); }
+
+  /* --- Marker --- */
+  .home-marker {
+    width: 18px; height: 18px; border-radius: 5px;
+    background: var(--ink);
+    border: 2.5px solid #fff;
+    box-shadow: 0 2px 6px #00000038;
+    transition: transform .15s ease;
+  }
+  .home-marker.pulse { animation: pulse 1.7s ease-in-out infinite; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 2px 6px #00000038, 0 0 0 0 #16181c33; }
+    50%      { box-shadow: 0 2px 6px #00000038, 0 0 0 9px #16181c00; }
+  }
+
+  /* --- FAB --- */
+  .fab {
+    position: absolute; right: 16px; bottom: 24px; z-index: 10;
+    width: 52px; height: 52px; border-radius: 50%;
+    background: var(--ink); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px #00000030; cursor: pointer;
+  }
+  .fab svg { width: 22px; height: 22px; }
+  .fab:active { transform: scale(.94); }
+
+  .fab-status {
+    position: absolute; right: 16px; bottom: 84px; z-index: 10;
+    background: var(--ink); color: #fff;
+    font-size: 12px; padding: 6px 10px; border-radius: 8px;
+    opacity: 0; transform: translateY(4px);
+    transition: opacity .2s ease, transform .2s ease;
+    pointer-events: none; max-width: 210px; text-align: right;
+  }
+  .fab-status.show { opacity: 1; transform: translateY(0); }
+
+  /* --- Bottom sheet --- */
+  .sheet-scrim {
+    position: absolute; inset: 0; z-index: 15;
+    background: #00000000; pointer-events: none;
+    transition: background .25s ease;
+  }
+  .sheet-scrim.open { background: #16181c33; pointer-events: auto; }
+
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 20;
+    background: var(--paper);
+    color: var(--ink);
+    border-top: 1px solid var(--line);
+    border-radius: 20px 20px 0 0;
+    padding: 10px 22px 28px;
+    transform: translateY(105%);
+    transition: transform .32s cubic-bezier(.2,.9,.25,1);
+    box-shadow: 0 -6px 26px #00000024;
+    max-height: 64vh; overflow-y: auto;
+  }
+  .sheet.open { transform: translateY(0); }
+
+  .sheet-handle {
+    width: 38px; height: 4px; border-radius: 2px;
+    background: var(--line-strong); margin: 6px auto 16px;
+  }
+
+  .sheet-district {
+    display: inline-block;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+    color: var(--grey);
+    border: 1px solid var(--line-strong);
+    padding: 4px 10px; border-radius: 999px;
+    margin-bottom: 12px;
+  }
+
+  .sheet h2 {
+    font-family: 'Lora', serif;
+    font-size: 19px; font-weight: 600;
+    margin: 0 0 16px; line-height: 1.35;
+  }
+  .sheet h2 a {
+    color: var(--ink); text-decoration: none;
+    border-bottom: 1.5px solid var(--ink);
+    padding-bottom: 1px;
+  }
+
+  .sheet-row {
+    display: flex; gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+    font-size: 14.5px; line-height: 1.5;
+  }
+  .sheet-row .ico {
+    flex: none; width: 18px; color: var(--grey-light);
+  }
+  .sheet-row .label {
+    color: var(--grey); font-size: 11.5px;
+    letter-spacing: .04em; text-transform: uppercase;
+    display: block; margin-bottom: 3px; font-weight: 600;
+  }
+  .sheet-contacts a {
+    color: var(--ink); text-decoration: none; display: block;
+    padding: 1px 0;
+  }
+  .sheet-contacts a:active { color: var(--grey); }
+
+  .sheet-note {
+    margin-top: 14px; padding-top: 14px;
+    border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--grey); line-height: 1.55;
+  }
+
+  .leaflet-control-attribution {
+    background: #ffffffcc !important;
+    color: var(--grey-light) !important;
+    font-size: 9px !important;
+  }
+  .leaflet-control-attribution a { color: var(--grey) !important; }
+  .leaflet-control-zoom { display: none; }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="header">
+  <h1>Домашние группы</h1>
+  <p>Небольшие тёплые встречи рядом с тобой — без формальностей, просто зайти в гости.</p>
+</div>
+
+<div class="chips">
+  <div class="chip active" data-district="all">Все группы</div>
+  <div class="chip" data-district="Иноземцево">Иноземцево</div>
+  <div class="chip" data-district="Пятигорск">Пятигорск</div>
+</div>
+
+<button class="fab" id="locateBtn" title="Найти ближайшую группу">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="3.2" fill="#ffffff"/>
+    <path d="M12 2V5M12 19V22M2 12H5M19 12H22" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="12" cy="12" r="7.2" stroke="#ffffff" stroke-width="1.6"/>
+  </svg>
+</button>
+<div class="fab-status" id="fabStatus"></div>
+
+<div class="sheet-scrim" id="scrim"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div id="sheetContent"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+  // ---------------------------------------------------------------------
+  // Данные домашних групп — правь этот массив, чтобы обновить точки на карте
+  // ---------------------------------------------------------------------
+  const GROUPS = [
+    {
+      id: 1,
+      district: "Иноземцево",
+      fullAddress: "Радонежская улица, 16, пос. Иноземцево, ГО Железноводск, Ставропольский край",
+      lat: 44.091356,
+      lon: 43.102153,
+      dayTime: "Пятница, 19:30",
+      contacts: [
+        { name: "Дмитрий", phone: "+7 928 350-18-99" },
+        { name: "Марк", phone: "+7 928 368-75-75" }
+      ],
+      mapUrl: "https://yandex.ru/maps/-/CTFEzGPw"
+    },
+    {
+      id: 2,
+      district: "Пятигорск",
+      fullAddress: "Пролетарская улица, 137А, пос. Свободы, ГО Пятигорск, Ставропольский край",
+      lat: 44.023405,
+      lon: 43.025112,
+      dayTime: "Пятница, 19:30",
+      contacts: [
+        { name: "Александр", phone: "+7 928 911-33-37" },
+        { name: "Иван", phone: "+7 903 444-43-68" }
+      ],
+      mapUrl: "https://yandex.ru/maps/-/CTFEfXI4"
+    },
+    {
+      id: 3,
+      district: "Иноземцево",
+      fullAddress: "улица Рядового Панченко, 24, пос. Иноземцево, ГО Железноводск, Ставропольский край",
+      lat: 44.083021,
+      lon: 43.121299,
+      dayTime: "Пятница, 19:30",
+      contacts: [
+        { name: "Игорь", phone: "+7 918 774-25-47" },
+        { name: "Сергей", phone: "+7 906 411-64-28" }
+      ],
+      mapUrl: "https://yandex.ru/maps/-/CTFErM5b"
+    }
+  ];
+
+  // ---------------------------------------------------------------------
+  // Telegram Mini App init
+  // ---------------------------------------------------------------------
+  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    try { tg.setHeaderColor('#ffffff'); } catch (e) {}
+    try { tg.setBackgroundColor('#ffffff'); } catch (e) {}
+  }
+
+  // ---------------------------------------------------------------------
+  // Карта
+  // ---------------------------------------------------------------------
+  const map = L.map('map', { zoomControl: false, attributionControl: true })
+    .setView([44.06, 43.07], 11);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  function makeIcon(pulse) {
+    return L.divIcon({
+      className: '',
+      html: '<div class="home-marker' + (pulse ? ' pulse' : '') + '"></div>',
+      iconSize: [18, 18],
+      iconAnchor: [9, 9]
+    });
+  }
+
+  const markers = {};
+  GROUPS.forEach(function (g) {
+    const marker = L.marker([g.lat, g.lon], { icon: makeIcon(false) }).addTo(map);
+    marker.on('click', function () { openSheet(g); });
+    markers[g.id] = marker;
+  });
+
+  // ---------------------------------------------------------------------
+  // Фильтр по району
+  // ---------------------------------------------------------------------
+  document.querySelectorAll('.chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      document.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+      chip.classList.add('active');
+      const d = chip.dataset.district;
+      GROUPS.forEach(function (g) {
+        const show = (d === 'all') || (g.district === d);
+        const el = markers[g.id].getElement();
+        if (el) el.style.display = show ? '' : 'none';
+      });
+    });
+  });
+
+  // ---------------------------------------------------------------------
+  // Карточка группы (bottom sheet)
+  // ---------------------------------------------------------------------
+  const sheet = document.getElementById('sheet');
+  const scrim = document.getElementById('scrim');
+  const sheetContent = document.getElementById('sheetContent');
+
+  function openSheet(g, distanceKm) {
+    const contactsHtml = g.contacts.map(function (c) {
+      const tel = c.phone.replace(/\s/g, '');
+      return '<a href="tel:' + tel + '">' + c.name + ' — ' + c.phone + '</a>';
+    }).join('');
+
+    sheetContent.innerHTML =
+      '<div class="sheet-district">' + g.district + '</div>' +
+      '<h2><a href="' + g.mapUrl + '" target="_blank" rel="noopener">' + g.fullAddress + '</a></h2>' +
+      '<div class="sheet-row"><span class="ico">◷</span><div><span class="label">Встречи</span>' + g.dayTime + '</div></div>' +
+      '<div class="sheet-row sheet-contacts"><span class="ico">☏</span><div><span class="label">Контакты</span>' + contactsHtml + '</div></div>' +
+      '<div class="sheet-note">Можно просто прийти и посмотреть — никто не будет ничего требовать. Если сомневаешься, напиши напрямую контактному человеку.</div>';
+
+    sheet.classList.add('open');
+    scrim.classList.add('open');
+    map.flyTo([g.lat, g.lon], 14, { duration: 0.5 });
+  }
+
+  function closeSheet() {
+    sheet.classList.remove('open');
+    scrim.classList.remove('open');
+  }
+  scrim.addEventListener('click', closeSheet);
+
+  // ---------------------------------------------------------------------
+  // Поиск ближайшей группы по геолокации
+  // ---------------------------------------------------------------------
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.pow(Math.sin(dLat / 2), 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.pow(Math.sin(dLon / 2), 2);
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+
+  const fabStatus = document.getElementById('fabStatus');
+  function showStatus(text, timeout) {
+    fabStatus.textContent = text;
+    fabStatus.classList.add('show');
+    if (timeout) {
+      setTimeout(function () { fabStatus.classList.remove('show'); }, timeout);
+    }
+  }
+
+  document.getElementById('locateBtn').addEventListener('click', function () {
+    if (!navigator.geolocation) {
+      showStatus('Геолокация недоступна', 2500);
+      return;
+    }
+    showStatus('Определяем местоположение…', 0);
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        fabStatus.classList.remove('show');
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        let nearest = null;
+        let nearestDist = Infinity;
+        GROUPS.forEach(function (g) {
+          const d = haversineKm(lat, lon, g.lat, g.lon);
+          if (d < nearestDist) { nearestDist = d; nearest = g; }
+        });
+        Object.keys(markers).forEach(function (k) { markers[k].setIcon(makeIcon(false)); });
+        if (nearest) {
+          markers[nearest.id].setIcon(makeIcon(true));
+          openSheet(nearest, nearestDist);
+        }
+      },
+      function () {
+        showStatus('Не удалось определить локацию', 2500);
+      },
+      { timeout: 8000 }
+    );
+  });
+</script>
+
+</body>
+</html>
