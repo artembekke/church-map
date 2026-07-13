@@ -32,9 +32,11 @@
 
   #map { position: absolute; inset: 0; z-index: 1; background: var(--paper); }
 
-  /* Обесцвечиваем тайлы до серой карты */
+  /* Обесцвечиваем тайлы и гасим детализацию:
+     дороги и кварталы остаются едва различимым фоном */
   .leaflet-tile-pane {
-    filter: grayscale(1) contrast(0.92) brightness(1.06);
+    filter: grayscale(1) contrast(0.42) brightness(1.1);
+    opacity: 0.72;
   }
 
   /* --- Header --- */
@@ -286,9 +288,12 @@
   const map = L.map('map', { zoomControl: false, attributionControl: true })
     .setView([44.06, 43.07], 11);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-    attribution: '© OpenStreetMap'
+  // Тайлы без подписей (названий улиц и населённых пунктов).
+  // Если захочешь вернуть подписи — поменяй light_nolabels на light_all.
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    subdomains: 'abcd',
+    attribution: '© OpenStreetMap, © CARTO'
   }).addTo(map);
 
   function makeIcon(pulse) {
