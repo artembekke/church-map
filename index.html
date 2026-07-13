@@ -382,7 +382,17 @@
 
     sheet.classList.add('open');
     scrim.classList.add('open');
-    map.flyTo([g.lat, g.lon], 14, { duration: 0.5 });
+    focusOnGroup(g);
+  }
+
+  // Центрируем карту так, чтобы точка оказалась в середине ВЕРХНЕЙ половины
+  // экрана — иначе её перекрывает выехавшая снизу карточка группы.
+  function focusOnGroup(g) {
+    const targetZoom = 14;
+    const point = map.project([g.lat, g.lon], targetZoom);
+    const offsetY = map.getSize().y / 4; // сдвигаем центр вниз на четверть экрана
+    const shiftedCenter = map.unproject(point.add([0, offsetY]), targetZoom);
+    map.flyTo(shiftedCenter, targetZoom, { duration: 0.5 });
   }
 
   function closeSheet() {
