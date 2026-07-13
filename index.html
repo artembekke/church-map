@@ -32,11 +32,10 @@
 
   #map { position: absolute; inset: 0; z-index: 1; background: var(--paper); }
 
-  /* Обесцвечиваем тайлы и гасим детализацию:
-     дороги и кварталы остаются едва различимым фоном */
+  /* Обесцвечиваем тайлы, но оставляем читаемую детализацию */
   .leaflet-tile-pane {
-    filter: grayscale(1) contrast(0.42) brightness(1.1);
-    opacity: 0.72;
+    filter: grayscale(1) contrast(0.78) brightness(1.02);
+    opacity: 0.95;
   }
 
   /* --- Header --- */
@@ -75,6 +74,20 @@
     background: var(--ink); color: #fff; border-color: var(--ink);
   }
   .chip:active { transform: scale(.96); }
+
+  /* --- Подписи населённых пунктов --- */
+  .place-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    white-space: nowrap;
+    text-shadow:
+      0 0 3px #fff, 0 0 3px #fff, 0 0 6px #fff, 0 0 6px #fff;
+    pointer-events: none;
+  }
 
   /* --- Marker --- */
   .home-marker {
@@ -304,6 +317,25 @@
       iconAnchor: [9, 9]
     });
   }
+
+  // Подписи населённых пунктов (тайлы идут без текста, поэтому ставим сами)
+  const PLACES = [
+    { name: 'Иноземцево', lat: 44.1055, lon: 43.1090 },
+    { name: 'Пятигорск',  lat: 44.0486, lon: 43.0594 }
+  ];
+
+  PLACES.forEach(function (p) {
+    L.marker([p.lat, p.lon], {
+      interactive: false,
+      keyboard: false,
+      icon: L.divIcon({
+        className: '',
+        html: '<div class="place-label">' + p.name + '</div>',
+        iconSize: [110, 16],
+        iconAnchor: [55, 8]
+      })
+    }).addTo(map);
+  });
 
   const markers = {};
   GROUPS.forEach(function (g) {
