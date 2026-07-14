@@ -47,22 +47,43 @@
   }
   .header h1 {
     font-family: 'Lora', serif;
-    font-weight: 600; font-size: 22px;
+    font-weight: 600; font-size: 23px;
     margin: 0 0 4px; color: var(--ink);
   }
   .header p {
+    font-family: 'Inter', sans-serif;
     margin: 0; font-size: 13px; color: var(--grey);
     line-height: 1.45; max-width: 290px;
   }
 
-  /* --- District chips --- */
+  /* ===================================================================
+     ТИПОГРАФИКА (единая шкала)
+     Lora  — заголовки: шапка, адрес в карточке, заголовок списка, секции,
+             подписи населённых пунктов на карте
+     Inter — интерфейс: подписи полей, кнопки, текст, контакты
+     Капс не используется: подписи идут обычным регистром, серым.
+     =================================================================== */
+
+  /* --- Фильтр по районам (только для домашних групп) --- */
+  .filter {
+    position: absolute; top: 108px; left: 16px; right: 16px; z-index: 10;
+    pointer-events: none;
+  }
+  .filter-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px; font-weight: 600;
+    color: var(--grey);
+    margin-bottom: 8px;
+    text-shadow: 0 0 4px #fff, 0 0 4px #fff, 0 0 8px #fff;
+  }
   .chips {
-    position: absolute; top: 112px; left: 16px; right: 16px; z-index: 10;
-    display: flex; gap: 8px; pointer-events: auto;
+    display: flex; gap: 7px; flex-wrap: wrap;
+    pointer-events: auto;
   }
   .chip {
+    display: inline-flex; align-items: center; gap: 6px;
     font-size: 13px; font-weight: 600;
-    padding: 8px 14px; border-radius: 999px;
+    padding: 8px 13px; border-radius: 999px;
     background: var(--paper);
     color: var(--ink-2);
     border: 1px solid var(--line-strong);
@@ -70,18 +91,29 @@
     box-shadow: 0 1px 3px #0000000d;
     transition: background .18s ease, color .18s ease, transform .14s ease, border-color .18s ease;
   }
+  .chip-count {
+    font-size: 11px; font-weight: 700;
+    min-width: 17px; height: 17px; padding: 0 4px;
+    border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--paper-2);
+    color: var(--grey);
+    transition: background .18s ease, color .18s ease;
+  }
   .chip.active {
     background: var(--ink); color: #fff; border-color: var(--ink);
+  }
+  .chip.active .chip-count {
+    background: #ffffff2e; color: #fff;
   }
   .chip:active { transform: scale(.96); }
 
   /* --- Подписи населённых пунктов --- */
   .place-label {
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: .12em;
-    text-transform: uppercase;
+    font-family: 'Lora', serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .04em;
     color: var(--ink-2);
     white-space: nowrap;
     text-shadow:
@@ -105,13 +137,19 @@
 
   /* --- Marker: церковь (главная точка) --- */
   .church-marker {
+    position: relative;
     width: 30px; height: 30px; border-radius: 50%;
     background: var(--ink);
     border: 3px solid #fff;
     box-shadow: 0 3px 10px #00000045;
-    display: flex; align-items: center; justify-content: center;
   }
-  .church-marker svg { width: 15px; height: 15px; }
+  .church-marker svg {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    display: block;
+    width: 14px; height: 14px;
+  }
 
   /* --- Нижняя панель с кнопками --- */
   .bottom-bar {
@@ -188,11 +226,11 @@
 
   .sheet-district {
     display: inline-block;
-    font-size: 11px; font-weight: 700;
-    letter-spacing: .06em; text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px; font-weight: 600;
     color: var(--grey);
     border: 1px solid var(--line-strong);
-    padding: 4px 10px; border-radius: 999px;
+    padding: 4px 11px; border-radius: 999px;
     margin-bottom: 12px;
   }
 
@@ -217,9 +255,9 @@
     flex: none; width: 18px; color: var(--grey-light);
   }
   .sheet-row .label {
-    color: var(--grey); font-size: 11.5px;
-    letter-spacing: .04em; text-transform: uppercase;
-    display: block; margin-bottom: 3px; font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    color: var(--grey); font-size: 12px; font-weight: 600;
+    display: block; margin-bottom: 3px;
   }
   .sheet-contacts a {
     color: var(--ink); text-decoration: none; display: block;
@@ -236,11 +274,12 @@
   /* --- Список групп внутри плашки --- */
   .list-title {
     font-family: 'Lora', serif;
-    font-size: 18px; font-weight: 600;
+    font-size: 19px; font-weight: 600;
     margin: 0 0 4px;
   }
   .list-sub {
-    font-size: 12.5px; color: var(--grey);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; color: var(--grey);
     margin: 0 0 6px;
   }
 
@@ -263,18 +302,24 @@
   /* Церковь в списке — крупнее и с крестом */
   .list-item-church { border-top: none; }
   .list-cross {
+    position: relative;
     flex: none;
     width: 28px; height: 28px; border-radius: 50%;
     background: var(--ink);
-    display: flex; align-items: center; justify-content: center;
   }
-  .list-cross svg { width: 13px; height: 13px; }
+  .list-cross svg {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    display: block;
+    width: 13px; height: 13px;
+  }
 
   .list-section {
-    font-size: 11.5px; font-weight: 700;
-    letter-spacing: .06em; text-transform: uppercase;
-    color: var(--grey);
-    padding: 16px 0 2px;
+    font-family: 'Lora', serif;
+    font-size: 15px; font-weight: 600;
+    color: var(--ink);
+    padding: 18px 0 2px;
     border-top: 1px solid var(--line);
     margin-top: 4px;
   }
@@ -340,10 +385,9 @@
   <p>Церковь и домашние группы рядом с тобой — нажми на точку, чтобы узнать подробности.</p>
 </div>
 
-<div class="chips">
-  <div class="chip active" data-district="all">Все группы</div>
-  <div class="chip" data-district="Иноземцево">Иноземцево</div>
-  <div class="chip" data-district="Пятигорск">Пятигорск</div>
+<div class="filter">
+  <div class="filter-label">Домашние группы</div>
+  <div class="chips" id="chips"></div>
 </div>
 
 <div class="bottom-bar">
@@ -552,10 +596,17 @@
   // Текущий выбранный фильтр — его же учитывает список групп
   let currentDistrict = 'all';
 
-  function fitToGroups(list, animate) {
-    // Церковь всегда должна оставаться в кадре — добавляем её к точкам
+  function fitToGroups(list, animate, includeChurch) {
     const points = list.map(function (g) { return [g.lat, g.lon]; });
-    points.push([CHURCH.lat, CHURCH.lon]);
+
+    // Церковь попадает в кадр только на стартовом виде.
+    // При фильтрации по районам она не влияет на масштаб —
+    // иначе выбор Пятигорска отдалял бы карту до Иноземцево.
+    if (includeChurch) {
+      points.push([CHURCH.lat, CHURCH.lon]);
+    }
+
+    if (!points.length) return;
 
     let bounds = L.latLngBounds(points);
 
@@ -571,7 +622,7 @@
     const opts = {
       // сверху оставляем место под заголовок и фильтры, снизу — под кнопки,
       // но с минимальным запасом, чтобы кадр был плотным
-      paddingTopLeft: [28, 158],
+      paddingTopLeft: [28, 172],
       paddingBottomRight: [28, 82]
     };
 
@@ -583,25 +634,54 @@
     }
   }
 
-  document.querySelectorAll('.chip').forEach(function (chip) {
-    chip.addEventListener('click', function () {
-      document.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
-      chip.classList.add('active');
+  // --- Строим чипы фильтра из данных: районы и количество групп в них ---
+  const chipsEl = document.getElementById('chips');
 
-      currentDistrict = chip.dataset.district;
-      const visible = [];
-
-      GROUPS.forEach(function (g) {
-        const show = (currentDistrict === 'all') || (g.district === currentDistrict);
-        const el = markers[g.id].getElement();
-        if (el) el.style.display = show ? '' : 'none';
-        if (show) visible.push(g);
-      });
-
-      closeSheet();
-      fitToGroups(visible);
+  function buildChips() {
+    const districts = [];
+    GROUPS.forEach(function (g) {
+      if (districts.indexOf(g.district) === -1) districts.push(g.district);
     });
-  });
+    districts.sort();
+
+    const items = [{ key: 'all', label: 'Все', count: GROUPS.length }];
+    districts.forEach(function (d) {
+      const count = GROUPS.filter(function (g) { return g.district === d; }).length;
+      items.push({ key: d, label: d, count: count });
+    });
+
+    chipsEl.innerHTML = items.map(function (it) {
+      const active = it.key === currentDistrict ? ' active' : '';
+      return (
+        '<div class="chip' + active + '" data-district="' + it.key + '">' +
+          '<span>' + it.label + '</span>' +
+          '<span class="chip-count">' + it.count + '</span>' +
+        '</div>'
+      );
+    }).join('');
+
+    chipsEl.querySelectorAll('.chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        chipsEl.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+
+        currentDistrict = chip.dataset.district;
+        const visible = visibleGroups();
+
+        GROUPS.forEach(function (g) {
+          const show = visible.indexOf(g) !== -1;
+          const el = markers[g.id].getElement();
+          if (el) el.style.display = show ? '' : 'none';
+        });
+
+        closeSheet();
+        // Церковь не учитываем — масштабируем строго под группы района
+        fitToGroups(visible, true, false);
+      });
+    });
+  }
+
+  buildChips();
 
   // ---------------------------------------------------------------------
   // Плашка снизу: два режима — список групп и карточка одной группы
@@ -803,9 +883,9 @@
   });
 
   // ---------------------------------------------------------------------
-  // Начальный вид — все группы в кадре (без анимации)
+  // Начальный вид — церковь и все группы в кадре (без анимации)
   // ---------------------------------------------------------------------
-  fitToGroups(GROUPS, false);
+  fitToGroups(GROUPS, false, true);
 </script>
 
 </body>
