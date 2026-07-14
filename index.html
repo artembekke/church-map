@@ -57,7 +57,7 @@
 
   /* --- District chips --- */
   .chips {
-    position: absolute; top: 94px; left: 16px; right: 16px; z-index: 10;
+    position: absolute; top: 112px; left: 16px; right: 16px; z-index: 10;
     display: flex; gap: 8px; pointer-events: auto;
   }
   .chip {
@@ -89,7 +89,7 @@
     pointer-events: none;
   }
 
-  /* --- Marker --- */
+  /* --- Marker: домашняя группа --- */
   .home-marker {
     width: 18px; height: 18px; border-radius: 5px;
     background: var(--ink);
@@ -102,6 +102,16 @@
     0%, 100% { box-shadow: 0 2px 6px #00000038, 0 0 0 0 #16181c33; }
     50%      { box-shadow: 0 2px 6px #00000038, 0 0 0 9px #16181c00; }
   }
+
+  /* --- Marker: церковь (главная точка) --- */
+  .church-marker {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--ink);
+    border: 3px solid #fff;
+    box-shadow: 0 3px 10px #00000045;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .church-marker svg { width: 15px; height: 15px; }
 
   /* --- Нижняя панель с кнопками --- */
   .bottom-bar {
@@ -249,6 +259,41 @@
     background: var(--ink);
     margin-top: 2px;
   }
+
+  /* Церковь в списке — крупнее и с крестом */
+  .list-item-church { border-top: none; }
+  .list-cross {
+    flex: none;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .list-cross svg { width: 13px; height: 13px; }
+
+  .list-section {
+    font-size: 11.5px; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+    color: var(--grey);
+    padding: 16px 0 2px;
+    border-top: 1px solid var(--line);
+    margin-top: 4px;
+  }
+
+  .list-empty {
+    padding: 16px 0 4px;
+    font-size: 13.5px; color: var(--grey);
+  }
+
+  /* Расписание в карточке церкви */
+  .schedule-line {
+    padding: 2px 0;
+  }
+
+  .sheet-district-church {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
   .list-main { flex: 1; min-width: 0; }
   .list-addr {
     font-size: 15px; font-weight: 600;
@@ -291,8 +336,8 @@
 <div id="map"></div>
 
 <div class="header">
-  <h1>Домашние группы</h1>
-  <p>Небольшие тёплые встречи рядом с тобой — без формальностей, просто зайти в гости.</p>
+  <h1>Интерактивная карта</h1>
+  <p>Церковь и домашние группы рядом с тобой — нажми на точку, чтобы узнать подробности.</p>
 </div>
 
 <div class="chips">
@@ -332,14 +377,32 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
   // ---------------------------------------------------------------------
+  // Церковь — главная точка на карте, показывается всегда
+  // ---------------------------------------------------------------------
+  const CHURCH = {
+    name: "Дом Молитвы",
+    shortAddress: "ул. Баталинская, 58",
+    fullAddress: "ул. Баталинская, 58, пос. Иноземцево",
+    lat: 44.094404,
+    lon: 43.096362,
+    schedule: [
+      "Понедельник, 19:30 — молитвенные группы",
+      "Четверг, 18:00 — молитвенное собрание",
+      "Пятница, 19:30 — домашние встречи",
+      "Воскресенье, 10:00 — церковное Богослужение"
+    ],
+    mapUrl: "https://yandex.ru/maps/-/CTFI4BPK"
+  };
+
+  // ---------------------------------------------------------------------
   // Данные домашних групп — правь этот массив, чтобы обновить точки на карте
   // ---------------------------------------------------------------------
   const GROUPS = [
     {
       id: 1,
       district: "Иноземцево",
-      shortAddress: "Радонежская, 16",
-      fullAddress: "Радонежская улица, 16, пос. Иноземцево, ГО Железноводск, Ставропольский край",
+      shortAddress: "ул. Радонежская, 16",
+      fullAddress: "ул. Радонежская, 16, пос. Иноземцево",
       lat: 44.091356,
       lon: 43.102153,
       dayTime: "Пятница, 19:30",
@@ -352,8 +415,8 @@
     {
       id: 2,
       district: "Пятигорск",
-      shortAddress: "Пролетарская, 137А",
-      fullAddress: "Пролетарская улица, 137А, пос. Свободы, ГО Пятигорск, Ставропольский край",
+      shortAddress: "ул. Пролетарская, 137А",
+      fullAddress: "ул. Пролетарская, 137А, пос. Свободы",
       lat: 44.023405,
       lon: 43.025112,
       dayTime: "Пятница, 19:30",
@@ -366,8 +429,8 @@
     {
       id: 3,
       district: "Иноземцево",
-      shortAddress: "Рядового Панченко, 24",
-      fullAddress: "улица Рядового Панченко, 24, пос. Иноземцево, ГО Железноводск, Ставропольский край",
+      shortAddress: "ул. Рядового Панченко, 24",
+      fullAddress: "ул. Рядового Панченко, 24, пос. Иноземцево",
       lat: 44.083021,
       lon: 43.121299,
       dayTime: "Пятница, 19:30",
@@ -376,6 +439,20 @@
         { name: "Сергей", phone: "+7 906 411-64-28" }
       ],
       mapUrl: "https://yandex.ru/maps/-/CTFErM5b"
+    },
+    {
+      id: 4,
+      district: "Пятигорск",
+      shortAddress: "пер. Провальский, 52",
+      fullAddress: "пер. Провальский, 52, пос. Горячеводский",
+      lat: 44.026160,
+      lon: 43.083282,
+      dayTime: "Пятница, 19:30",
+      contacts: [
+        { name: "Роман", phone: "+7 961 490-98-55" },
+        { name: "Сергей", phone: "+7 928 630-95-34" }
+      ],
+      mapUrl: "https://yandex.com/maps?ol=geo&text=Provalskiy%20pereulok,%2052&sll=43.083282,44.026160&sspn=0.005924,0.008210"
     }
   ];
 
@@ -443,24 +520,44 @@
     markers[g.id] = marker;
   });
 
+  // Маркер церкви — крупнее, круглый, с крестом. Показывается всегда,
+  // независимо от выбранного фильтра по районам.
+  const churchIcon = L.divIcon({
+    className: '',
+    html:
+      '<div class="church-marker">' +
+        '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="M12 2V22M5 9H19" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>' +
+        '</svg>' +
+      '</div>',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+  });
+
+  L.marker([CHURCH.lat, CHURCH.lon], { icon: churchIcon, zIndexOffset: 1000 })
+    .addTo(map)
+    .on('click', function () { openChurchSheet(); });
+
   // ---------------------------------------------------------------------
   // Фильтр по району
   // ---------------------------------------------------------------------
 
   // Логика масштабирования при выборе фильтра:
-  // - если точки района разбросаны ШИРЕ 10 км — просто вмещаем их все в кадр;
-  // - если компактнее — держим зум в «коридоре» 3–10 км:
+  // - если точки района разбросаны ШИРЕ 8 км — просто вмещаем их все в кадр;
+  // - если компактнее — держим зум в «коридоре» 3–8 км:
   //   не приближаемся ближе, чем радиус 3 км вокруг центра точек.
-  const MIN_RADIUS_M = 3000;    // нижний предел приближения (радиус)
-  const WIDE_SPREAD_M = 10000;  // если разброс точек шире — показываем всё как есть
+  const MIN_RADIUS_M = 3000;   // нижний предел приближения (радиус)
+  const WIDE_SPREAD_M = 8000;  // если разброс точек шире — показываем всё как есть
 
   // Текущий выбранный фильтр — его же учитывает список групп
   let currentDistrict = 'all';
 
   function fitToGroups(list, animate) {
-    if (!list.length) return;
+    // Церковь всегда должна оставаться в кадре — добавляем её к точкам
+    const points = list.map(function (g) { return [g.lat, g.lon]; });
+    points.push([CHURCH.lat, CHURCH.lon]);
 
-    let bounds = L.latLngBounds(list.map(function (g) { return [g.lat, g.lon]; }));
+    let bounds = L.latLngBounds(points);
 
     // Оцениваем разброс точек по диагонали охватывающего прямоугольника
     const spread = map.distance(bounds.getNorthWest(), bounds.getSouthEast());
@@ -474,7 +571,7 @@
     const opts = {
       // сверху оставляем место под заголовок и фильтры, снизу — под кнопки,
       // но с минимальным запасом, чтобы кадр был плотным
-      paddingTopLeft: [28, 135],
+      paddingTopLeft: [28, 158],
       paddingBottomRight: [28, 82]
     };
 
@@ -520,43 +617,86 @@
     });
   }
 
-  // --- Режим 1: список групп ---
+  // --- Режим 1: список (церковь + домашние группы) ---
   function openList() {
     const list = visibleGroups();
 
-    if (!list.length) {
-      sheetContent.innerHTML = '<h2 class="list-title">Групп не найдено</h2>';
-    } else {
-      const itemsHtml = list.map(function (g) {
-        const phones = g.contacts.map(function (c) { return c.phone; }).join(' · ');
-        return (
-          '<div class="list-item" data-id="' + g.id + '">' +
-            '<div class="list-dot"></div>' +
-            '<div class="list-main">' +
-              '<div class="list-addr">' + g.shortAddress + '</div>' +
-              '<div class="list-meta">' + g.district + ' · ' + phones + '</div>' +
-            '</div>' +
-            '<div class="list-chevron">›</div>' +
-          '</div>'
-        );
-      }).join('');
+    const churchItem =
+      '<div class="list-item list-item-church" data-church="1">' +
+        '<div class="list-cross">' +
+          '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+            '<path d="M12 3V21M6 9H18" stroke="#fff" stroke-width="3" stroke-linecap="round"/>' +
+          '</svg>' +
+        '</div>' +
+        '<div class="list-main">' +
+          '<div class="list-addr">' + CHURCH.name + ' · ' + CHURCH.shortAddress + '</div>' +
+          '<div class="list-meta">Воскресенье, 10:00 — Богослужение</div>' +
+        '</div>' +
+        '<div class="list-chevron">›</div>' +
+      '</div>';
 
-      sheetContent.innerHTML =
-        '<h2 class="list-title">Домашние группы</h2>' +
-        '<p class="list-sub">Нажми на группу, чтобы посмотреть на карте</p>' +
-        itemsHtml;
+    const groupsHtml = list.length
+      ? list.map(function (g) {
+          const phones = g.contacts.map(function (c) { return c.phone; }).join(' · ');
+          return (
+            '<div class="list-item" data-id="' + g.id + '">' +
+              '<div class="list-dot"></div>' +
+              '<div class="list-main">' +
+                '<div class="list-addr">' + g.shortAddress + '</div>' +
+                '<div class="list-meta">' + g.district + ' · ' + phones + '</div>' +
+              '</div>' +
+              '<div class="list-chevron">›</div>' +
+            '</div>'
+          );
+        }).join('')
+      : '<div class="list-empty">В этом районе пока нет домашних групп</div>';
 
-      sheetContent.querySelectorAll('.list-item').forEach(function (el) {
-        el.addEventListener('click', function () {
-          const id = parseInt(el.dataset.id, 10);
-          const g = GROUPS.find(function (x) { return x.id === id; });
-          if (g) openSheet(g, null, true);
-        });
+    sheetContent.innerHTML =
+      '<h2 class="list-title">Интерактивная карта</h2>' +
+      '<p class="list-sub">Нажми, чтобы посмотреть на карте</p>' +
+      churchItem +
+      '<div class="list-section">Домашние группы</div>' +
+      groupsHtml;
+
+    sheetContent.querySelectorAll('.list-item').forEach(function (el) {
+      el.addEventListener('click', function () {
+        if (el.dataset.church) {
+          openChurchSheet(true);
+          return;
+        }
+        const id = parseInt(el.dataset.id, 10);
+        const g = GROUPS.find(function (x) { return x.id === id; });
+        if (g) openSheet(g, null, true);
       });
-    }
+    });
 
     sheet.classList.add('open');
     scrim.classList.add('open');
+  }
+
+  // --- Карточка церкви ---
+  function openChurchSheet(fromList) {
+    const backHtml = fromList
+      ? '<button class="sheet-back" id="backToList">‹ К списку</button>'
+      : '';
+
+    const scheduleHtml = CHURCH.schedule.map(function (s) {
+      return '<div class="schedule-line">' + s + '</div>';
+    }).join('');
+
+    sheetContent.innerHTML =
+      backHtml +
+      '<div class="sheet-district sheet-district-church">Церковь</div>' +
+      '<h2><a href="' + CHURCH.mapUrl + '" target="_blank" rel="noopener">' + CHURCH.fullAddress + '</a></h2>' +
+      '<div class="sheet-row"><span class="ico">◷</span><div><span class="label">Расписание</span>' + scheduleHtml + '</div></div>' +
+      '<div class="sheet-note">Приходи на любое собрание — можно просто прийти и посмотреть, никто не будет ничего требовать.</div>';
+
+    const backBtn = document.getElementById('backToList');
+    if (backBtn) backBtn.addEventListener('click', openList);
+
+    sheet.classList.add('open');
+    scrim.classList.add('open');
+    focusOnGroup(CHURCH);
   }
 
   // --- Режим 2: карточка конкретной группы ---
