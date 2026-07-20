@@ -329,9 +329,30 @@
     font-size: 13.5px; color: var(--grey);
   }
 
-  /* Расписание в карточке церкви */
-  .schedule-line {
-    padding: 2px 0;
+  /* Расписание в карточке церкви — сгруппировано по дням недели */
+  .schedule-day-group {
+    padding: 9px 0;
+    border-top: 1px solid var(--line);
+  }
+  .schedule-day-group:first-child { border-top: none; padding-top: 0; }
+  .schedule-day-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px; font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .schedule-event {
+    display: flex; gap: 12px;
+    padding: 3px 0;
+  }
+  .schedule-event .schedule-time {
+    flex: none; width: 44px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px; font-weight: 600;
+    color: var(--grey-light);
+  }
+  .schedule-event .schedule-title {
+    font-size: 13.5px; color: var(--ink-2); line-height: 1.4;
   }
 
   .sheet-district-church {
@@ -430,13 +451,13 @@
     lat: 44.094404,
     lon: 43.096362,
     schedule: [
-      "Воскресенье, 10:00 — церковное Богослужение",
-      "Воскресенье, 12:30 — тематический семинар",
-      "Понедельник, 19:30 — молитвенные группы",
-      "Четверг, 18:00 — молитвенное собрание",
-      "Пятница, 19:30 — домашние встречи",
-      "Суббота, 15:00 — подростковая встреча",
-      "Суббота, 19:00 — молодежное общение"
+      { day: "Воскресенье", time: "10:00", title: "Церковное Богослужение" },
+      { day: "Воскресенье", time: "12:30", title: "Тематический семинар" },
+      { day: "Понедельник", time: "19:30", title: "Молитвенные группы" },
+      { day: "Четверг", time: "18:00", title: "Молитвенное собрание" },
+      { day: "Пятница", time: "19:30", title: "Домашние встречи" },
+      { day: "Суббота", time: "15:00", title: "Подростковая встреча" },
+      { day: "Суббота", time: "19:00", title: "Молодежное общение" }
     ],
     mapUrl: "https://yandex.ru/maps/-/CTFI4BPK"
   };
@@ -763,8 +784,32 @@
       ? '<button class="sheet-back" id="backToList">‹ К списку</button>'
       : '';
 
-    const scheduleHtml = CHURCH.schedule.map(function (s) {
-      return '<div class="schedule-line">' + s + '</div>';
+    // Группируем события по дням недели, сохраняя порядок первого появления дня
+    const scheduleDays = [];
+    CHURCH.schedule.forEach(function (s) {
+      let group = scheduleDays.find(function (d) { return d.day === s.day; });
+      if (!group) {
+        group = { day: s.day, events: [] };
+        scheduleDays.push(group);
+      }
+      group.events.push(s);
+    });
+
+    const scheduleHtml = scheduleDays.map(function (group) {
+      const eventsHtml = group.events.map(function (s) {
+        return (
+          '<div class="schedule-event">' +
+            '<span class="schedule-time">' + s.time + '</span>' +
+            '<span class="schedule-title">' + s.title + '</span>' +
+          '</div>'
+        );
+      }).join('');
+      return (
+        '<div class="schedule-day-group">' +
+          '<div class="schedule-day-label">' + group.day + '</div>' +
+          eventsHtml +
+        '</div>'
+      );
     }).join('');
 
     sheetContent.innerHTML =
